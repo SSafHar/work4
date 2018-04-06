@@ -1,0 +1,21 @@
+#
+# File: ntp.yml
+# Description: ntp installation playbook.
+#
+---
+
+-   name: "*** NTP installation playbook"
+    hosts: "*"
+
+    tasks:
+        - name: "Install ntp"
+          apt: pkg=ntp state=installed
+          become: yes
+
+        - name: "Configure ntp"
+          template: src=../templates/system/ntp.conf.j2 dest=/etc/ntp.conf
+          become: yes
+
+        - name: "NSet timezone variables"
+          template: src=../templates/system/timezone.j2 dest=/etc/timezone
+          become: yes

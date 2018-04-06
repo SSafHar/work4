@@ -1,0 +1,40 @@
+#
+# File: frontend.yml
+# Description: frontend build playbook.
+#
+---
+
+-   name: "*** Build angular applications: admin and retailer."
+    hosts: "*"
+
+    #
+    # Load environment variables
+    #
+    pre_tasks:
+        - include_vars: "{{ item }}"
+          with_items: "{{ env_vars }}"
+
+    #
+    # Variables
+    #
+    vars:
+        - app_frontend_dir: "{{ app_frontend_dir }}"
+
+    #
+    # Tasks
+    #
+    tasks:
+        - name: "NPM install modules"
+          shell: "cd {{ app_frontend_dir }}; npm i"
+          ignore_errors: yes
+          become: no
+
+        - name: "typings install modules"
+          shell: "cd {{ app_frontend_dir }}; typings i"
+          ignore_errors: yes
+          become: no
+
+        - name: "Build admin application"
+          shell: "cd {{ app_frontend_dir }}; npm run odeon"
+          ignore_errors: yes
+          become: no

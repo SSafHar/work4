@@ -1,0 +1,50 @@
+#
+# File: playbook.yml
+# Description: Node.js installation playbook.
+#
+---
+
+-   name: "Node.js installation playbook"
+    hosts: "*"
+
+    #
+    # Variables
+    #
+    vars:
+        # Node.js
+        - nodejs_packages:
+            - 'nodejs'
+
+        - version: "{{ ver | default ('6') }}"
+
+    #
+    # Tasks
+    #
+    tasks:
+        # Node.js
+        - name: "Add node.js packages"
+          shell: "curl -sL https://deb.nodesource.com/setup_{{ version }}.x | sudo -E bash -"
+          become: yes
+
+        - name: "Install node.js"
+          apt: pkg={{ item }}
+               state=latest
+               update_cache=yes
+          with_items: "{{ nodejs_packages }}"
+          become: yes
+
+        - name: "npm install gulp"
+          shell: "npm install gulp -g"
+          become: yes
+
+        - name: "npm install nodemon"
+          shell: "npm install nodemon -g"
+          become: yes
+
+        - name: "npm rebuild node-sass"
+          shell: "npm rebuild node-sass"
+          become: yes
+
+        - name: "npm install aglio"
+          shell: "npm install aglio -g"
+          become: yes

@@ -1,0 +1,86 @@
+#
+# File: mysql_db.yml
+# Description: Create mysql database
+#
+---
+
+- name: "*** Create mysql database"
+  hosts: "*"
+  
+
+  #
+  # Variables
+  #
+  vars:
+    # MySQL
+    - mysql_db_name: "{{ mysql_db_name }}"
+    - mysql_db_user: "{{ mysql_db_user }}"
+    - mysql_root_pass_file: "/root/.mysql.root.password"
+    - mysql_user_pass_file: "~/.mysql.{{ mysql_db_name }}.password"
+    - mysql_db_hosts:
+        - '127.0.0.1'
+        - 'localhost'
+        - '::1'
+        - '%'
+        - '{{ ansible_hostname }}'
+
+  #
+  # Tasks
+  #
+  tasks:
+    # MySQL
+    - name: "Check MySQL root password."
+      stat: path={{ mysql_root_pass_file }}
+      register: mysql_root_pass_file_exist
+      become: yes
+
+    - name: "Fetch MySQL root password."
+      shell: "cat {{ mysql_root_pass_file }}"
+      register: mysq_root_password
+      when: mysql_root_pass_file_exist.stat.exists == True
+      become: yes
+
+    - name: "Check user MySQL password."
+      stat: path={{ mysql_user_pass_file }}
+      register: db_pass_file_exist
+      become: yes
+
+    - name: "Generate user password."
+      lineinfile: dest="{{ mysql_user_pass_file }}"
+                  line="{{ lookup('pipe', 'openssl rand -hex 10') }}"
+                  create=yes
+                  state=present
+      when: db_pass_file_exist.stat.exists == False
+      become: yes
+
+    - name: "Check user MySQL password."
+      stat: path={{ mysql_user_pass_file }}
+      register: db_pass_file_exist
+      become: yes
+
+    - name: "Fetch mysql user password."
+      shell: "cat {{ mysql_user_pass_file }}"
+      register: mysql_user_password
+      when: db_pass_file_exist.stat.exists == True
+      become: yes
+
+    - name: "Create databases."
+      mysql_db: name={{ mysql_db_name }}
+                login_user=root
+                login_password={{ mysq_root_password.stdout }}
+                state=present
+      when: db_pass_file_exist.stat.exists == True
+
+    - name: "Grant user permissions."
+      mysql_user: name={{ mysql_db_user }}
+                  host={{ item }}
+                  priv={{ mysql_db_name }}.*:ALL
+                  append_privs=yes
+                  password={{ mysql_user_password.stdout }}
+                  login_user=root
+                  login_password={{ mysq_root_password.stdout }}
+                  state=present
+      with_items:
+        - "{{ mysql_db_hosts }}"
+      when: db_pass_file_exist.stat.exists == True
+      ignore_errors: yes

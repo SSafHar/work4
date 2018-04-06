@@ -1,0 +1,14 @@
+#
+# File: ssh.yml
+# Description: ssh settings playbook.
+#
+---
+
+-   name: "*** SSH settings playbook"
+    hosts: "*"
+
+    tasks:
+        # sshd
+        - name: 'Fix session pam_keyinit'
+          replace: dest='/etc/pam.d/sshd' regexp='^session    optional     pam_keyinit.so force revoke$' replace='session    optional     pam_keyinit.so'
+          become: yes

@@ -1,0 +1,16 @@
+#
+# File: memcache.yml
+# Description: memcache server installation playbook.
+#
+---
+
+-   name: "*** Memcache server installation playbook"
+    hosts: "*"
+
+    #
+    # Tasks
+    #
+    tasks:
+      - name: "Install memcache server."
+        apt: pkg=memcached update_cache=yes state=present
+        become: yes

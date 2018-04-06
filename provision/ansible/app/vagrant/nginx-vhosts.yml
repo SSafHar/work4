@@ -1,0 +1,11 @@
+#
+# File: nginx-vhosts.yml
+# Description: Update NGINX virtual hosts.
+#
+---
+
+-   name: "Update NGINX virtual hosts"
+    hosts: "*"
+
+# Run playbooks
+-   include: ../../playbooks/nginx-vagrant.yml env_vars="['../vars/vagrant.env.yml', '../vars/default.env.yml']"

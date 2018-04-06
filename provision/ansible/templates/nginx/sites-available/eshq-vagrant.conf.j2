@@ -1,0 +1,10 @@
+server {
+    server_name eshq.192.168.33.208.xip.io;
+    root /var/www/elasticsearch-HQ;
+    index index.html;
+    location / {
+        try_files $uri $uri/ =404;
+    }
+    error_log /var/log/nginx/error.log;
+    access_log /var/log/nginx/access.log;
+}

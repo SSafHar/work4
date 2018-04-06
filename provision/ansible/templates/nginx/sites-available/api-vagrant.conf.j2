@@ -1,0 +1,82 @@
+server {
+    listen 80;
+    server_name api.192.168.33.208.xip.io;
+    root /var/www/odeon-backend/web;
+    index app_dev.php;
+    # DEFAULT
+    location / {
+        if ($request_method = OPTIONS ) {
+            return 200;
+        }
+
+        add_header Access-Control-Allow-Origin "*";
+        add_header Access-Control-Allow-Methods "GET,POST";
+        add_header Access-Control-Allow-Headers "Access-Control-Allow-Origin,Accept,authToken,Content-Type";
+
+        try_files $uri /app_dev.php$is_args$args;
+    }
+    # DEV
+    location ~ ^/(app_dev|config)\.php(/|$) {
+        fastcgi_pass unix:/var/run/php/php7.1-fpm.sock;
+        fastcgi_split_path_info ^(.+\.php)(/.*)$;
+        include fastcgi_params;
+        fastcgi_param SCRIPT_FILENAME $realpath_root$fastcgi_script_name;
+        fastcgi_param DOCUMENT_ROOT $realpath_root;
+    }
+    # PROD
+    location ~ ^/app\.php(/|$) {
+        fastcgi_pass unix:/var/run/php/php7.1-fpm.sock;
+        fastcgi_split_path_info ^(.+\.php)(/.*)$;
+        include fastcgi_params;
+        fastcgi_param SCRIPT_FILENAME $realpath_root$fastcgi_script_name;
+        fastcgi_param DOCUMENT_ROOT $realpath_root;
+        internal;
+    }
+    location ~ \.php$ {
+        return 404;
+    }
+    error_log /var/log/nginx/api-vagrant_error.log;
+    access_log /var/log/nginx/api-vagrant_access.log;
+}
+server {
+    listen 443 ssl;
+    server_name api.192.168.33.208.xip.io;
+    root /var/www/odeon-backend/web;
+    index app_dev.php;
+    # SSL
+    ssl on;
+    ssl_certificate /etc/ssl/certs/ssl-cert-snakeoil.pem;
+    ssl_certificate_key /etc/ssl/private/ssl-cert-snakeoil.key;
+    # DEFAULT
+    location / {
+        if ($request_method = OPTIONS ) {
+            return 200;
+        }
+        add_header Access-Control-Allow-Origin "*";
+        add_header Access-Control-Allow-Methods "GET,POST";
+        add_header Access-Control-Allow-Headers "Access-Control-Allow-Origin,Accept,x-access-token,Content-Type";
+        try_files $uri /app_dev.php$is_args$args;
+    }
+    # DEV
+    location ~ ^/(app_dev|config)\.php(/|$) {
+        fastcgi_pass unix:/var/run/php/php7.1-fpm.sock;
+        fastcgi_split_path_info ^(.+\.php)(/.*)$;
+        include fastcgi_params;
+        fastcgi_param SCRIPT_FILENAME $realpath_root$fastcgi_script_name;
+        fastcgi_param DOCUMENT_ROOT $realpath_root;
+    }
+    # PROD
+    location ~ ^/app\.php(/|$) {
+        fastcgi_pass unix:/var/run/php/php7.1-fpm.sock;
+        fastcgi_split_path_info ^(.+\.php)(/.*)$;
+        include fastcgi_params;
+        fastcgi_param SCRIPT_FILENAME $realpath_root$fastcgi_script_name;
+        fastcgi_param DOCUMENT_ROOT $realpath_root;
+        internal;
+    }
+    location ~ \.php$ {
+        return 404;
+    }
+    error_log /var/log/nginx/api-vagrant_error.log;
+    access_log /var/log/nginx/api-vagrant_access.log;
+}

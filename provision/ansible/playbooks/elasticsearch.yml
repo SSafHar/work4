@@ -1,0 +1,101 @@
+#
+# File: playbook.yml
+# Description: Elasticsearch installation playbook.
+#
+---
+
+-   name: "Elasticsearch installation playbook"
+    hosts: "*"
+
+    #
+    # Variables
+    #
+    vars:
+        - version: "{{ ver | default ('5.x') }}"
+
+    #
+    # Tasks
+    #
+    tasks:
+        # Elasticsearch
+        - name: "Add elasticsearch ppa key"
+          shell: keyserver=hkp://packages.elastic.co/GPG-KEY-elasticsearch:80
+                   id=D88E42B4
+                   state=present
+          become: yes
+
+        - name: "Add gpg key"
+          shell: "apt-key adv --keyserver keyserver.ubuntu.com --recv-keys D27D666CD88E42B4"
+          become: yes
+
+        # v1
+        - name: "Remove elasticsearch 1.x sources list"
+          file: path='/etc/apt/sources.list.d/elasticsearch-1.x.list' state=absent
+          when: version == "1.x"
+          become: yes
+
+        - name: "Add elasticsearch 1.x sources list"
+          lineinfile: line="deb http://packages.elastic.co/elasticsearch/1.7/debian stable main"
+                      dest=/etc/apt/sources.list.d/elasticsearch-1.x.list
+                      state=present
+                      create=yes
+          when: version == "1.x"
+          become: yes
+
+        # v2
+        - name: "Remove elasticsearch 2.x sources list"
+          file: path='/etc/apt/sources.list.d/elasticsearch-2.x.list' state=absent
+          when: version == "2.x"
+          become: yes
+
+        - name: "Add elasticsearch 2.x sources list"
+          lineinfile: line="deb https://packages.elastic.co/elasticsearch/2.x/debian stable main"
+                      dest=/etc/apt/sources.list.d/elasticsearch-2.x.list
+                      state=present
+                      create=yes
+          when: version == "2.x"
+          become: yes
+
+        # v5
+        - name: "Remove elasticsearch 5.x sources list"
+          file: path='/etc/apt/sources.list.d/elastic-5.x.list' state=absent
+          when: version == "5.x"
+          become: yes
+
+        - name: "Add elasticsearch 5.x sources list"
+          lineinfile: line="deb https://artifacts.elastic.co/packages/5.x/apt stable main"
+                      dest=/etc/apt/sources.list.d/elastic-5.x.list
+                      state=present
+                      create=yes
+          when: version == "5.x"
+          become: yes          
+
+        - name: "Install elasticsearch"
+          apt: name=elasticsearch
+               state=present
+               update_cache=yes
+          become: yes
+
+        - name: "Install elasticsearch"
+          shell: "update-rc.d elasticsearch defaults 95 10"
+          become: yes
+
+        - name: "Update elasticsearch bind host"
+          shell: "echo 'network.bind_host: 0.0.0.0' >> /etc/elasticsearch/elasticsearch.yml"
+          become: yes
+
+        - name: "Update elasticsearch allow-origin"
+          shell: "echo 'http.cors.allow-origin: \"*\"' >> /etc/elasticsearch/elasticsearch.yml"
+          become: yes
+
+        - name: "Update elasticsearch cors"
+          shell: "echo 'http.cors.enabled: true' >> /etc/elasticsearch/elasticsearch.yml"
+          become: yes
+
+        - name: "Update elasticsearch master"
+          shell: "echo 'node.master: true' >> /etc/elasticsearch/elasticsearch.yml"
+          become: yes
+
+        - name: "Restart elasticsearch service"
+          shell: "service elasticsearch restart"
+          become: yes

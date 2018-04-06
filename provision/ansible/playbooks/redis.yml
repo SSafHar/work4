@@ -1,0 +1,16 @@
+#
+# File: redis.yml
+# Description: Redis server installation playbook.
+#
+---
+
+-   name: "*** Redis server installation playbook"
+    hosts: "*"
+
+    #
+    # Tasks
+    #
+    tasks:
+      - name: "Install redis server."
+        apt: pkg=redis-server update_cache=yes state=present
+        become: yes

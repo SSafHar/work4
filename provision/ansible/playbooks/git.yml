@@ -1,0 +1,16 @@
+#
+# File: git.yml
+# Description: GIT vcs installation playbook.
+#
+---
+
+-   name: "*** GIT vcs installation playbook"
+    hosts: "*"
+
+    #
+    # Tasks
+    #
+    tasks:
+      - name: "Install GIT vcs."
+        apt: pkg=git update_cache=yes state=present
+        become: yes

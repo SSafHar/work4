@@ -1,0 +1,43 @@
+#
+# File: playbook.yml
+# Description: Elasticsearch index management playbook.
+#
+---
+
+- name: "Elasticsearch index management"
+  hosts: "*"
+
+  #
+  # Variables
+  #
+  vars:
+      - el_index: "{{ index }}"
+      - el_host: "{{ host | default('localhost') }}"
+      - el_port: "{{ port | default('9200') }}"
+
+  #
+  # Tasks
+  #
+  tasks:
+      - name: "Installing curl"
+        apt: name=curl
+             state=present
+             force=yes
+             install_recommends=yes
+             update_cache=yes
+        become: true
+        tags:
+            - create
+            - delete
+
+      - name: "Create elasticsearch index"
+        shell: "curl -XPUT '{{ el_host }}:{{ el_port }}/{{ el_index }}?pretty'"
+        become: yes
+        tags:
+            - create
+
+      - name: "Create elasticsearch index"
+        shell: "curl -XDELETE '{{ el_host }}:{{ el_port }}/{{ el_index }}?pretty'"
+        become: yes
+        tags:
+            - delete

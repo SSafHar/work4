@@ -1,0 +1,25 @@
+server {
+    listen 80;
+    server_name odeon.192.168.33.208.xip.io;
+    root /var/www/odeon/odeon-frontend;
+    index index.html;
+    location / {
+        try_files $uri $uri/ /index.html =404;
+    }
+    error_log /var/log/nginx/error.log;
+    access_log /var/log/nginx/access.log;
+}
+server {
+    listen 443 ssl;
+    server_name admin.192.168.33.208.xip.io;
+    root /var/www/odeon-frontend;
+    index index.html;
+    ssl on;
+    ssl_certificate /etc/ssl/certs/ssl-cert-snakeoil.pem;
+    ssl_certificate_key /etc/ssl/private/ssl-cert-snakeoil.key;
+    location / {
+        try_files $uri $uri/ /index.html =404;
+    }
+    error_log /var/log/nginx/error.log;
+    access_log /var/log/nginx/access.log;
+}

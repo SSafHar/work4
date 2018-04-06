@@ -1,0 +1,57 @@
+#
+# File: playbook.yml
+# Description: Create swapfile.
+#
+---
+
+- name: 'Create swap file'
+  hosts: '*'
+
+  pre_tasks:
+    - include_vars: "{{ item }}"
+      with_items: "{{ env_vars }}"
+
+  vars:
+    - swapfile_mem: "{{ swapfile_mem }}"
+
+  tasks:
+    # Swap
+    - name: "Check if swapfile exist."
+      stat: path='/swapfile'
+      register: stat_swapfile
+      become: yes
+
+    - name: "Alloc swapfile."
+      shell: "fallocate -l {{ swapfile_mem }} /swapfile"
+      become: yes
+      when: stat_swapfile.stat.exists == False
+
+    - name: "Chown swapfile to 600."
+      shell: path='/swapfile' mode=0600
+      become: yes
+      when: stat_swapfile.stat.exists == False
+
+    - name: "Create swapfile."
+      shell: "mkswap /swapfile"
+      become: yes
+      when: stat_swapfile.stat.exists == False
+
+    - name: "Swapon swapfile."
+      shell: "swapon /swapfile"
+      become: yes
+      when: stat_swapfile.stat.exists == False
+
+    - name: "Register swaprfile to fstab."
+      shell: "echo '/swapfile none swap sw 0 0' >> /etc/fstab"
+      become: yes
+      when: stat_swapfile.stat.exists == False
+
+    - name: "Tuneup swap. Define swappiness."
+      shell: "echo 'vm.swappiness=30' >> /etc/sysctl.conf"
+      become: yes
+      when: stat_swapfile.stat.exists == False
+
+    - name: "Tuneup swap. Define vfs cache pressure."
+      shell: "echo 'vm.vfs_cache_pressure=50;' >> /etc/sysctl.conf"
+      become: yes
+      when: stat_swapfile.stat.exists == False

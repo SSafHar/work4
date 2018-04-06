@@ -1,0 +1,41 @@
+#
+# File: playbook.yml
+# Description: java8 install provision.
+#
+---
+
+- name:  "Installing java8."
+  hosts: "*"
+
+  #
+  # Variables
+  #
+  vars:
+    # JAVA
+    - java_packages:
+        - 'oracle-java8-installer'
+        - 'ca-certificates'
+        - 'oracle-java8-set-default'
+
+  #
+  # Tasks
+  #
+  tasks:
+    - name: "Add Oracle Java Repository."
+      apt_repository: repo='ppa:webupd8team/java'
+      become: yes
+
+    - name: "Accept Java 8 License."
+      debconf: name='oracle-java8-installer'
+               question='shared/accepted-oracle-license-v1-1'
+               value='true'
+               vtype='select'
+      become: yes
+
+    - name: "Install Oracle Java 8."
+      apt: name={{ item }}
+           state=present
+           force=yes
+           update_cache=yes
+      with_items: "{{ java_packages }}"
+      become: yes

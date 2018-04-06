@@ -1,0 +1,32 @@
+#
+# File: nginx.yml
+# Description: Nginx installation playbook.
+#
+---
+
+-   name: "*** Nginx installation playbook"
+    hosts: "*"
+
+    #
+    # Variables
+    #
+    vars:
+        - common_packages:
+            - 'curl'
+            - 'dos2unix'
+            - 'ssl-cert'
+
+    #
+    # Tasks
+    #
+    tasks:
+        # Common packages
+        - name: "Install common packages."
+          apt: pkg={{ item }} state=present
+          with_items: "{{ common_packages }}"
+          become: yes
+
+        # Nginx webserver
+        - name: "Install Nginx webserver."
+          apt: pkg=nginx update_cache=yes force=yes state=present
+          become: yes

@@ -1,0 +1,16 @@
+#
+# File: beanstalkd.yml
+# Description: beanstalkd installation playbook.
+#
+---
+
+-   name: "*** Beanstalkd installation playbook"
+    hosts: "*"
+
+    #
+    # Tasks
+    #
+    tasks:
+      - name: "Install beanstalkd."
+        apt: pkg=beanstalkd update_cache=yes state=present
+        become: yes

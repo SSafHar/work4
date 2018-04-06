@@ -1,0 +1,27 @@
+#
+# File: composer.yml
+# Description: composer installation playbook.
+#
+---
+
+- hosts: "*"
+
+  #
+  # Tasks
+  #
+  tasks:
+
+    # Composer
+    - name: "Check if composer exist"
+      stat: path=/usr/local/bin/composer
+      register: stat_composer
+      become: yes
+
+    - name: "Download composer"
+      shell: "cd /tmp; curl -sS https://getcomposer.org/installer | php"
+      when: stat_composer.stat.exists == False
+
+    - name: "nstall composer"
+      shell: "cd /tmp; mv composer.phar /usr/local/bin/composer"
+      when: stat_composer.stat.exists == False
+      become: yes

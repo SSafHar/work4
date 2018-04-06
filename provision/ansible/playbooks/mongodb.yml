@@ -1,0 +1,92 @@
+#
+# File: playbook.yml
+# Description: Mongo installation playbook.
+#
+---
+
+-   name: "MongoDB installation playbook"
+    hosts: "*"
+
+    #
+    # Variables
+    #
+    vars:
+        - locales:
+            - 'export LANGUAGE=en_US.UTF-8'
+            - 'export LANG=en_US.UTF-8'
+            - 'export LC_ALL=en_US.UTF-8'
+            - 'locale-gen en_US.UTF-8'
+            - 'dpkg-reconfigure locales'
+
+        - version: "{{ ver | default ('3.x') }}"
+
+    #
+    # Tasks
+    #
+    tasks:
+        # Locales
+        - name: "Fix locales."
+          shell: "{{ item }}"
+          with_items: "{{ locales }}"
+          become: yes
+
+        # Mongo
+        - name: "Add mongo ppa key"
+          apt_key: keyserver=hkp://keyserver.ubuntu.com:80
+                   id=7F0CEB10
+                   state=present
+          become: yes
+
+        - name: "Add gpg key"
+          shell: "apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 0C49F3730359A14518585931BC711F9BA15703C6"
+          become: yes
+
+        # 3.x
+        - name: "Add mongo 3.x sources list"
+          lineinfile: line="deb http://repo.mongodb.org/apt/ubuntu trusty/mongodb-org/3.4 multiverse"
+                      dest=/etc/apt/sources.list.d/mongodb.list
+                      state=present
+                      create=yes
+          when: version == "3.x"
+          become: yes
+
+        - name: "Install mongo"
+          apt: name=mongodb state=latest update_cache=yes
+          when: version == "3.x"
+          become: yes
+
+        - name: "Update mongo bind ip"
+          lineinfile: dest=/etc/mongodb.conf regexp='bind_ip = 127.0.0.1' line='bind_ip = 0.0.0.0'
+          when: version == "3.x"
+          become: yes
+
+        # restart
+        - name: "Restart mongo service"
+          shell: "service mongodb restart"
+          when: version == "3.x"
+          become: yes
+
+        # 2.x
+        - name: "Add mongo 2.x sources list"
+          lineinfile: line="deb http://downloads-distro.mongodb.org/repo/ubuntu-upstart dist 10gen"
+                      dest=/etc/apt/sources.list.d/mongodb.list
+                      state=present
+                      create=yes
+          when: version == "2.x"
+          become: yes
+
+        - name: "Install mongo 2.6"
+          shell: "apt-get update --fix-missing; apt-get install -f -y mongodb-org=2.6.10 mongodb-org-server=2.6.10 mongodb-org-shell=2.6.10 mongodb-org-mongos=2.6.10 mongodb-org-tools=2.6.10"
+          when: version == "2.x"
+          become: yes
+
+        - name: "Update mongo bind ip"
+          lineinfile: dest=/etc/mongod.conf regexp='bind_ip = 127.0.0.1' line='bind_ip = 0.0.0.0'
+          when: version == "2.x"
+          become: yes
+
+        # restart
+        - name: "Restart mongo service"
+          shell: "service mongod restart"
+          when: version == "2.x"
+          become: yes

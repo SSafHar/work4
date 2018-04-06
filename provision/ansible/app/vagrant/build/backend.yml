@@ -1,0 +1,30 @@
+#
+# File: backend.yml
+# Description: backend build playbook.
+#
+---
+
+-   name: "*** Build symfony application."
+    hosts: "*"
+
+    #
+    # Load environment variables
+    #
+    pre_tasks:
+        - include_vars: "{{ item }}"
+          with_items: "{{ env_vars }}"
+
+    #
+    # Variables
+    #
+    vars:
+        - app_backend_dir: "{{ app_backend_dir }}"
+
+    #
+    # Tasks
+    #
+    tasks:
+        - name: "Update vendor bundles."
+          shell: "cd {{ app_backend_dir }}; composer update"
+          ignore_errors: yes
+          become: no

@@ -1,0 +1,53 @@
+#
+# File: nginx-vagrant.yml
+# Description: Nginx vagrant installation playbook.
+#
+---
+
+-   name: "*** Nginx vagrant installation playbook"
+    hosts: "*"
+
+    #
+    # Load environment variables
+    #
+    pre_tasks:
+        - include_vars: "{{ item }}"
+          with_items: "{{ env_vars }}"
+
+    #
+    # Variables
+    #
+    vars:
+        - nginx_vhosts: "{{ app_nginx_vhosts }}"
+
+    #
+    # Tasks
+    #
+    tasks:
+        - name: "Remove default nginx configuration."
+          file: path="/etc/nginx/sites-enabled/default" state=absent
+          with_items: "{{ nginx_vhosts }}"
+          ignore_errors: yes
+          become: yes
+
+        - name: "Remove previous links."
+          file: path="/etc/nginx/sites-enabled/{{ item.link }}" state=absent
+          with_items: "{{ nginx_vhosts }}"
+          ignore_errors: yes
+          become: yes
+
+        - name: "Add app virtual host"
+          template: src={{ item.src }} dest={{ item.dest }}
+          with_items: "{{ nginx_vhosts }}"
+          become: yes
+
+        - name: "Enable virtual hosts"
+          file: src="/etc/nginx/sites-available/{{ item.link }}"
+                dest=/etc/nginx/sites-enabled/{{ item.link }}
+                state=link
+          with_items: "{{ nginx_vhosts }}"
+          become: yes
+
+        - name: "Restart Nginx webserver."
+          shell: "service nginx restart"
+          become: yes

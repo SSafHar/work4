@@ -1,0 +1,28 @@
+#
+# File: locales.yml
+# Description: Update system locales
+#
+---
+
+- name: "*** Update system locales"
+  hosts: "*"
+
+  #
+  # Variables
+  #
+  vars:
+    - locales:
+        - 'export LANGUAGE=en_US.UTF-8'
+        - 'export LANG=en_US.UTF-8'
+        - 'export LC_ALL=en_US.UTF-8'
+        - 'locale-gen en_US.UTF-8'
+        - 'dpkg-reconfigure locales'
+
+  #
+  # Tasks
+  #
+  tasks:
+    - name: "Fix system locales."
+      shell: "{{ item }}"
+      with_items: "{{ locales }}"
+      become: yes

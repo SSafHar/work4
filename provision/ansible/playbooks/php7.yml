@@ -1,0 +1,73 @@
+#
+# File: php7.yml
+# Description: PHP7 installation playbook
+#
+---
+
+- include: locales.yml
+
+- name: "*** PHP7 installation playbook"
+  hosts: "*"
+
+  #
+  # Variables
+  #
+  vars:
+    # Common software
+    - common_packages:
+        - 'imagemagick'
+
+    # PHP
+    - php_packages:
+        - 'php7.1-cli'
+        - 'php7.1-cgi'
+        - 'php7.1-dev'
+        - 'php7.1-fpm'
+        - 'php7.1-json'
+        - 'php7.1-tidy'
+        - 'php7.1-curl'
+        - 'php7.1-mbstring'
+        - 'php7.1-bcmath'
+        - 'php7.1-common'
+        - 'php7.1-mysql'
+        - 'php7.1-pgsql'
+        - 'php-imagick'
+        - 'php7.1-gd'
+        - 'php7.1-xml'
+        - 'php7.1-mongodb'
+        - 'php7.1-zip'
+
+  #
+  # Tasks
+  #
+  tasks:
+    # Common packages
+    - name: "Install common packages."
+      apt: pkg={{ item }} state=installed
+      with_items: "{{ common_packages }}"
+      become: yes
+
+    # PHP
+    - name: "Add PHP7 ppa repository."
+      apt_repository: repo=ppa:ondrej/php
+      become: yes
+
+    - name: "Install PHP7 packages."
+      apt: pkg={{ item }} update_cache=yes state=present
+      with_items: "{{ php_packages }}"
+      become: yes
+
+    - name: "Check php.ini file."
+      stat: path='/etc/php/7.1/fpm/php.ini'
+      become: yes
+      register: stat_php_ini
+
+    - name: "Update fpm memory limit."
+      lineinfile: dest=/etc/php/7.1/fpm/php.ini regexp='memory_limit = 128M' line='memory_limit = 256M'
+      become: yes
+      when: stat_php_ini.stat.exists
+
+    - name: "Fix fpm cgi.fix_pathinfo."
+      lineinfile: dest=/etc/php/7.1/fpm/php.ini regexp=';cgi.fix_pathinfo=1' line='cgi.fix_pathinfo=0'
+      become: yes
+      when: stat_php_ini.stat.exists

@@ -1,0 +1,11 @@
+#
+# File: app-build-backend.yml
+# Description: Application build backend.
+#
+---
+
+-   name: "Build frontend"
+    hosts: "*"
+
+# Run playbooks
+-   include: ./build/backend.yml env_vars="['../../../vars/vagrant.env.yml', '../../../vars/default.env.yml']"

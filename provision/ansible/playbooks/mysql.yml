@@ -1,0 +1,85 @@
+#
+# File: mysql.yml
+# Description: MySQL installation playbook
+#
+---
+
+- name: "*** MySQL installation playbook"
+  hosts: "*"
+
+  #
+  # Load environment variables
+  #
+  pre_tasks:
+    - include_vars: "{{ item }}"
+      with_items: "{{ env_vars }}"
+
+  #
+  # Variables
+  #
+  vars:
+    - mysql_packages:
+        - 'python-pycurl'
+        - 'python-mysqldb'
+        - 'mysql-common'
+        - 'mysql-client'
+        - 'mysql-server'
+
+    - mysql_root_pass_file: "{{ mysql_root_pass_file }}"
+
+    - mysql_db_hosts:
+        - '127.0.0.1'
+        - 'localhost'
+        - '::1'
+
+  #
+  # Tasks
+  #
+  tasks:
+    # MySQL
+    - name: "Install MySQL packages."
+      apt: pkg="{{ item }}"
+           force=yes
+           update_cache=yes
+           state=present
+      with_items: "{{ mysql_packages }}"
+      environment:
+        DEBIAN_FRONTEND: noninteractive
+      become: yes
+
+    - name: "Check MySQL .mysql.cnf.lock file."
+      stat: path='~/.mysql.cnf.lock'
+      register: mysql_cnf_lock
+      become: yes
+
+    - name: "Add MySQL .mysql.cnf.lock file."
+      file: path="~/.mysql.cnf.lock" state=touch
+      when: mysql_cnf_lock.stat.exists == False
+      become: yes
+
+    - name: "Check MySQL root password."
+      stat: path={{ mysql_root_pass_file }}
+      register: mysql_root_pass_file_exist
+      become: yes
+
+    - name: "Generate MySQL root password."
+      lineinfile: dest="{{ mysql_root_pass_file }}"
+                  line="{{ lookup('pipe', 'openssl rand -hex 10') }}"
+                  create=yes
+                  state=present
+      when: mysql_root_pass_file_exist.stat.exists == False
+      become: yes
+
+    - name: "Fetch MySQL root password."
+      shell: "cat {{ mysql_root_pass_file }}"
+      register: mysq_root_password
+      become: yes
+
+    - name: "Update MySQL root password for localhost."
+      mysql_user: name=root
+                  host={{ item }}
+                  password={{ mysq_root_password.stdout }}
+      with_items: "{{ mysql_db_hosts}}"
+      when: mysql_root_pass_file_exist.stat.exists == False
+      ignore_errors: yes
+      become: yes
